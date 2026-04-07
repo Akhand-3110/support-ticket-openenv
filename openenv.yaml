@@ -4,6 +4,14 @@ description: Customer support ticket resolution environment
 entry_point: my_env_v2:SupportEnv
 
 tasks:
-  - easy
-  - medium
-  - hard
+  - name: easy
+    description: Simple technical issue
+    grader: my_env_v2:SupportEnv.grade
+
+  - name: medium
+    description: Billing issue handling
+    grader: my_env_v2:SupportEnv.grade
+
+  - name: hard
+    description: Complex multi-step issue
+    grader: my_env_v2:SupportEnv.grade
