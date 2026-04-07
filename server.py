@@ -10,8 +10,10 @@ def home():
 
 @app.post("/reset")
 async def reset():
-    return await env.reset()
+    result = await env.reset()
+    return result.dict()
 
 @app.post("/step")
 async def step(action: dict):
-    return await env.step(Action(**action))
+    result = await env.step(Action(**action))
+    return result.dict()

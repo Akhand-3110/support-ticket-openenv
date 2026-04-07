@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from typing import Optional
 import random
 
 class Observation(BaseModel):
@@ -9,25 +10,27 @@ class Action(BaseModel):
     action: str
     response: str
 
+class StepResult(BaseModel):
+    observation: Observation
+    reward: float
+    done: bool
+    info: Optional[dict] = {}
 
 class SupportEnv:
 
     def __init__(self):
         self.tasks = [
             {
-                "name": "easy",
                 "ticket": "App is not opening",
                 "category": "tech",
                 "action": "troubleshoot"
             },
             {
-                "name": "medium",
                 "ticket": "Payment failed but money deducted",
                 "category": "billing",
                 "action": "refund"
             },
             {
-                "name": "hard",
                 "ticket": "App crashes after payment and no confirmation",
                 "category": "billing",
                 "action": "escalate"
@@ -40,11 +43,12 @@ class SupportEnv:
         self.current = random.choice(self.tasks)
         self.done = False
 
-        return {
-            "observation": Observation(ticket=self.current["ticket"]),
-            "reward": 0.0,
-            "done": False
-        }
+        return StepResult(
+            observation=Observation(ticket=self.current["ticket"]),
+            reward=0.0,
+            done=False,
+            info={}
+        )
 
     async def step(self, action: Action):
         reward = 0.0
@@ -63,11 +67,12 @@ class SupportEnv:
 
         self.done = True
 
-        return {
-            "observation": Observation(ticket=self.current["ticket"]),
-            "reward": reward,
-            "done": True
-        }
+        return StepResult(
+            observation=Observation(ticket=self.current["ticket"]),
+            reward=reward,
+            done=True,
+            info={}
+        )
 
     async def state(self):
         return self.current
