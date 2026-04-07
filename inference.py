@@ -10,6 +10,8 @@ MODEL_NAME = os.getenv("MODEL_NAME", "Qwen/Qwen2.5-72B-Instruct")
 
 MAX_STEPS = 3
 
+client = OpenAI(base_url=API_BASE_URL, api_key=API_KEY)
+
 
 def log_start(task, env, model):
     print(f"[START] task={task} env={env} model={model}", flush=True)
@@ -30,26 +32,44 @@ def log_end(success, steps, score, rewards):
     )
 
 
-def get_action(ticket: str):
-    ticket_lower = ticket.lower()
+def get_action_from_llm(ticket: str) -> Action:
+    prompt = f"""
+You are a customer support agent.
 
-    if "payment" in ticket_lower:
+Ticket:
+{ticket}
+
+Respond in JSON format:
+{{
+  "category": "...",
+  "action": "...",
+  "response": "..."
+}}
+
+Rules:
+- category: billing / tech / general
+- action: refund / troubleshoot / escalate / ignore
+"""
+
+    response = client.chat.completions.create(
+        model=MODEL_NAME,
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.2,
+        max_tokens=100,
+    )
+
+    text = response.choices[0].message.content.strip()
+
+    # simple safe fallback
+    try:
+        import json
+        data = json.loads(text)
+        return Action(**data)
+    except:
         return Action(
-            category="billing",
-            action="refund",
-            response="We are sorry for the inconvenience. Your refund will be processed shortly.",
-        )
-    elif "crash" in ticket_lower:
-        return Action(
-            category="billing",
+            category="general",
             action="escalate",
-            response="We have escalated your issue to our support team for further investigation.",
-        )
-    else:
-        return Action(
-            category="tech",
-            action="troubleshoot",
-            response="Please try restarting the app and ensure you are using the latest version.",
+            response="We are looking into your issue."
         )
 
 
@@ -68,14 +88,14 @@ async def main():
             if result.done:
                 break
 
-            ticket = result.observation.ticket   # ✅ FIXED
+            ticket = result.observation.ticket
 
-            action = get_action(ticket)
+            action = get_action_from_llm(ticket)   # ✅ LLM CALL
 
             result = await env.step(action)
 
-            reward = result.reward              # ✅ FIXED
-            done = result.done                  # ✅ FIXED
+            reward = result.reward
+            done = result.done
 
             rewards.append(reward)
             steps = step
