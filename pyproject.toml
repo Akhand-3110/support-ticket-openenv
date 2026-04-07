@@ -1,0 +1,14 @@
+[project]
+name = "support-ticket-openenv"
+version = "0.1.0"
+description = "Customer support ticket OpenEnv environment"
+authors = [{ name = "Akhand Pratap Singh" }]
+dependencies = [
+    "fastapi",
+    "uvicorn",
+    "pydantic",
+    "openai"
+]
+
+[tool.openenv]
+entry_point = "my_env_v2:SupportEnv"
