@@ -1,0 +1,7 @@
+name: support_ticket_env
+description: Customer support ticket resolution environment
+
+tasks:
+  - easy
+  - medium
+  - hard
