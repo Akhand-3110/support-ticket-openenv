@@ -1,8 +1,11 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Dict
 import random
 
 
+# -----------------------------
+# Models (OpenEnv Required)
+# -----------------------------
 class Observation(BaseModel):
     ticket: str
 
@@ -17,12 +20,16 @@ class StepResult(BaseModel):
     observation: Observation
     reward: float
     done: bool
-    info: Optional[dict] = {}
+    info: Optional[Dict] = {}
 
 
+# -----------------------------
+# Environment
+# -----------------------------
 class SupportEnv:
 
     def __init__(self):
+        # ✅ 3 TASKS (easy → hard)
         self.tasks = [
             {
                 "name": "easy",
@@ -43,9 +50,13 @@ class SupportEnv:
                 "action": "escalate"
             }
         ]
+
         self.current = None
         self.done = False
 
+    # -----------------------------
+    # RESET
+    # -----------------------------
     async def reset(self):
         self.current = random.choice(self.tasks)
         self.done = False
@@ -57,26 +68,36 @@ class SupportEnv:
             info={"task": self.current["name"]}
         )
 
-    # ✅ GRADER FUNCTION
+    # -----------------------------
+    # GRADER (IMPORTANT)
+    # -----------------------------
     def grade(self, action: Action) -> float:
         score = 0.0
 
+        # Correct category
         if action.category == self.current["category"]:
             score += 0.4
 
+        # Correct action
         if action.action == self.current["action"]:
             score += 0.4
 
-        if len(action.response) > 20:
+        # Good response
+        if len(action.response.strip()) > 20:
             score += 0.2
 
+        # Penalize bad behavior
         if action.action == "ignore":
             score -= 0.5
 
+        # Clamp between 0 and 1
         return max(0.0, min(1.0, score))
 
+    # -----------------------------
+    # STEP
+    # -----------------------------
     async def step(self, action: Action):
-        reward = self.grade(action)   # ✅ USING GRADER
+        reward = self.grade(action)  # ✅ USE GRADER
 
         self.done = True
 
@@ -87,5 +108,8 @@ class SupportEnv:
             info={"task": self.current["name"]}
         )
 
+    # -----------------------------
+    # STATE
+    # -----------------------------
     async def state(self):
         return self.current
