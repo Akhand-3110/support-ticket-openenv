@@ -3,12 +3,17 @@ name = "support-ticket-openenv"
 version = "0.1.0"
 description = "Customer support ticket OpenEnv environment"
 authors = [{ name = "Akhand Pratap Singh" }]
+
 dependencies = [
     "fastapi",
     "uvicorn",
     "pydantic",
-    "openai"
+    "openai",
+    "openenv-core>=0.2.0"
 ]
+
+[project.scripts]
+start = "server.app:app"
 
 [tool.openenv]
 entry_point = "my_env_v2:SupportEnv"
